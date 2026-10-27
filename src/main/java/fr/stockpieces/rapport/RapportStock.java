@@ -1,6 +1,7 @@
 package fr.stockpieces.rapport;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import fr.stockpieces.piece.Piece;
@@ -10,31 +11,31 @@ import fr.stockpieces.piece.Piece;
  */
 public final class RapportStock {
 
+	private static final String ENTETE = """
+			RAPPORT DE STOCK
+			================
+			Pièces référencées : %d
+			Valeur du stock : %s €
+			Pièces à réapprovisionner : %d
+			""";
+
+	private static final String LIGNE_ALERTE = "  - %s : %d en stock (seuil %d)\n";
+
 	private RapportStock() {
 	}
 
 	public static String generer(List<Piece> pieces) {
-		BigDecimal valeurTotale = BigDecimal.ZERO;
-		int enAlerte = 0;
-		StringBuilder lignes = new StringBuilder();
-		for (Piece piece : pieces) {
-			valeurTotale = valeurTotale.add(piece.valeurStock());
-			if (piece.enAlerte()) {
-				enAlerte++;
-				lignes.append("  - ").append(piece.getReference()).append(" : ")
-						.append(piece.getQuantiteStock()).append(" en stock (seuil ")
-						.append(piece.getSeuilAlerte()).append(")\n");
-			}
-		}
+		BigDecimal valeurTotale = pieces.stream()
+				.map(Piece::valeurStock)
+				.reduce(BigDecimal.ZERO, BigDecimal::add)
+				.setScale(2, RoundingMode.HALF_UP);
+		List<Piece> enAlerte = pieces.stream().filter(Piece::enAlerte).toList();
 
-		String rapport = "RAPPORT DE STOCK\n"
-				+ "================\n"
-				+ "Pièces référencées : " + pieces.size() + "\n"
-				+ "Valeur du stock : " + valeurTotale.setScale(2, BigDecimal.ROUND_HALF_UP) + " €\n"
-				+ "Pièces à réapprovisionner : " + enAlerte + "\n";
-		if (enAlerte > 0) {
-			rapport = rapport + lignes;
+		StringBuilder rapport = new StringBuilder(
+				ENTETE.formatted(pieces.size(), valeurTotale.toPlainString(), enAlerte.size()));
+		for (Piece piece : enAlerte) {
+			rapport.append(LIGNE_ALERTE.formatted(piece.getReference(), piece.getQuantiteStock(), piece.getSeuilAlerte()));
 		}
-		return rapport;
+		return rapport.toString();
 	}
 }

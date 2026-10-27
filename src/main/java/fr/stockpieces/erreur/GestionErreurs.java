@@ -16,23 +16,21 @@ public class GestionErreurs {
 	@ExceptionHandler({ PieceIntrouvableException.class, StockInsuffisantException.class,
 			ReferenceDejaUtiliseeException.class })
 	public ResponseEntity<Erreur> erreurMetier(RuntimeException exception) {
-		HttpStatus statut;
-		String code;
-		if (exception instanceof PieceIntrouvableException) {
-			statut = HttpStatus.NOT_FOUND;
-			code = "PIECE_INTROUVABLE";
-		} else if (exception instanceof StockInsuffisantException) {
-			statut = HttpStatus.CONFLICT;
-			code = "STOCK_INSUFFISANT";
-		} else {
-			statut = HttpStatus.CONFLICT;
-			code = "REFERENCE_DEJA_UTILISEE";
+		if (exception instanceof PieceIntrouvableException introuvable) {
+			return reponse(HttpStatus.NOT_FOUND, "PIECE_INTROUVABLE", introuvable);
 		}
-		return ResponseEntity.status(statut).body(new Erreur(code, exception.getMessage()));
+		if (exception instanceof StockInsuffisantException insuffisant) {
+			return reponse(HttpStatus.CONFLICT, "STOCK_INSUFFISANT", insuffisant);
+		}
+		return reponse(HttpStatus.CONFLICT, "REFERENCE_DEJA_UTILISEE", exception);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Erreur> donneesInvalides(MethodArgumentNotValidException exception) {
 		return ResponseEntity.badRequest().body(new Erreur("DONNEES_INVALIDES", "Certains champs sont invalides."));
+	}
+
+	private static ResponseEntity<Erreur> reponse(HttpStatus statut, String code, RuntimeException exception) {
+		return ResponseEntity.status(statut).body(new Erreur(code, exception.getMessage()));
 	}
 }

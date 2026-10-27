@@ -54,19 +54,15 @@ public class Piece {
 	 * @throws StockInsuffisantException si une sortie dépasse le stock disponible
 	 */
 	public void appliquer(TypeMouvement type, int quantite) {
-		switch (type) {
-			case ENTREE:
-				quantiteStock = quantiteStock + quantite;
-				break;
-			case SORTIE:
+		quantiteStock = switch (type) {
+			case ENTREE -> quantiteStock + quantite;
+			case SORTIE -> {
 				if (quantite > quantiteStock) {
 					throw new StockInsuffisantException(reference, quantiteStock, quantite);
 				}
-				quantiteStock = quantiteStock - quantite;
-				break;
-			default:
-				throw new IllegalArgumentException("Type de mouvement inconnu : " + type);
-		}
+				yield quantiteStock - quantite;
+			}
+		};
 	}
 
 	public boolean enAlerte() {

@@ -1,9 +1,7 @@
 package fr.stockpieces.piece;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +11,6 @@ public class PieceService {
 
 	private final PieceRepository repository;
 
-	@Autowired
 	public PieceService(PieceRepository repository) {
 		this.repository = repository;
 	}
@@ -22,7 +19,7 @@ public class PieceService {
 	public List<PieceResponse> lister() {
 		return repository.findAllByOrderByReferenceAsc().stream()
 				.map(PieceResponse::de)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -34,22 +31,22 @@ public class PieceService {
 	public List<PieceResponse> enAlerte() {
 		return repository.findEnAlerte().stream()
 				.map(PieceResponse::de)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public PieceResponse creer(PieceRequest requete) {
-		String reference = requete.getReference().trim();
+		String reference = requete.reference().trim();
 		if (repository.existsByReferenceIgnoreCase(reference)) {
 			throw new ReferenceDejaUtiliseeException(reference);
 		}
-		Piece piece = new Piece(reference, requete.getLibelle().trim(), requete.getQuantiteStock(),
-				requete.getSeuilAlerte(), requete.getPrixUnitaire());
+		Piece piece = new Piece(reference, requete.libelle().trim(), requete.quantiteStock(),
+				requete.seuilAlerte(), requete.prixUnitaire());
 		return PieceResponse.de(repository.save(piece));
 	}
 
 	public PieceResponse mouvement(Long id, MouvementRequest requete) {
 		Piece piece = charger(id);
-		piece.appliquer(requete.getType(), requete.getQuantite());
+		piece.appliquer(requete.type(), requete.quantite());
 		return PieceResponse.de(piece);
 	}
 
