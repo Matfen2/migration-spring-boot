@@ -18,7 +18,7 @@
 	<description>Gestion du stock de pièces détachées : application héritée, support d'une migration Java 11 / Spring Boot 2 vers Java 17 / Spring Boot 3</description>
 
 	<properties>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<springfox.version>3.0.0</springfox.version>
 	</properties>
 
